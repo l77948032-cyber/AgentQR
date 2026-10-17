@@ -1,0 +1,11 @@
+.build/
+.swiftpm/
+.DS_Store
+.env
+.env.*
+*.pdf
+*.png
+*.jpg
+*.jpeg
+private/
+artifacts/
