@@ -9,3 +9,6 @@
 *.jpeg
 private/
 artifacts/
+**/bin/
+**/obj/
+**/TestResults/
