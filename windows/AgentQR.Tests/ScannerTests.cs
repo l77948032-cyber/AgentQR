@@ -5,12 +5,12 @@ using Xunit;
 using ZXing;
 using ZXing.QrCode;
 
-namespace ScanBridge.Tests;
+namespace AgentQR.Tests;
 
 public sealed class ScannerTests : IDisposable
 {
     private const string Payload = "https://example.com/invoice?token=synthetic-only";
-    private readonly string directory = Path.Combine(Path.GetTempPath(), "ScanBridge tests-" + Guid.NewGuid());
+    private readonly string directory = Path.Combine(Path.GetTempPath(), "AgentQR tests-" + Guid.NewGuid());
 
     public ScannerTests() => Directory.CreateDirectory(directory);
     public void Dispose() => Directory.Delete(directory, recursive: true);
@@ -24,7 +24,7 @@ public sealed class ScannerTests : IDisposable
         using var bitmap = Code(Payload);
         var path = Save(bitmap, format);
         Assert.Equal([Payload], new QrScanner().Decode(path));
-        var fixtureDirectory = Environment.GetEnvironmentVariable("SCANBRIDGE_FIXTURES_DIR");
+        var fixtureDirectory = Environment.GetEnvironmentVariable("AGENTQR_FIXTURES_DIR");
         if (format == ImageFormatKind.Png && fixtureDirectory is not null)
         {
             Directory.CreateDirectory(fixtureDirectory);

@@ -2,7 +2,7 @@ using System.Drawing;
 using ZXing;
 using ZXing.Common;
 
-namespace ScanBridge;
+namespace AgentQR;
 
 public sealed class QrScanner
 {

@@ -1,4 +1,4 @@
-# ScanBridge for Windows
+# AgentQR for Windows
 
 A local, noninteractive QR decoder for agent integrations. This is the Windows
 backend, not a complete MCP server or agent-plugin package. It uses C#/.NET 10
@@ -9,17 +9,17 @@ and ZXing.Net, independently of the macOS Swift/Vision backend.
 Build on Windows with the .NET 10 SDK:
 
 ```powershell
-dotnet run --project windows/ScanBridge -- scan "C:\Invoices\qr.png"
-dotnet run --project windows/ScanBridge -- scan "C:\Invoices\qr.png" --reveal
-dotnet test windows/ScanBridge.Tests -c Release
+dotnet run --project windows/AgentQR -- scan "C:\Invoices\qr.png"
+dotnet run --project windows/AgentQR -- scan "C:\Invoices\qr.png" --reveal
+dotnet test windows/AgentQR.Tests -c Release
 ```
 
 Publish a self-contained x64 Windows application (the destination computer does
 not need to install .NET). Keep the entire output directory together:
 
 ```powershell
-dotnet publish windows/ScanBridge -c Release -r win-x64 --self-contained true -o artifacts/windows-x64
-.\artifacts\windows-x64\scanbridge.exe scan "C:\Invoices\qr.png"
+dotnet publish windows/AgentQR -c Release -r win-x64 --self-contained true -o artifacts/windows-x64
+.\artifacts\windows-x64\agentqr.exe scan "C:\Invoices\qr.png"
 ```
 
 The Windows CI workflow tests generated QR images and the published executable,
@@ -83,4 +83,4 @@ Windows backend never opens URLs.
 
 Dependencies: [ZXing.Net](https://github.com/micjahn/ZXing.Net) and its
 [Windows binding](https://www.nuget.org/packages/ZXing.Net.Bindings.Windows.Compatibility),
-licensed under Apache-2.0. This does not select a license for ScanBridge itself.
+licensed under Apache-2.0. This does not select a license for AgentQR itself.

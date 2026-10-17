@@ -1,6 +1,6 @@
 using System.Text.Json;
 
-namespace ScanBridge;
+namespace AgentQR;
 
 public static class ScanCommand
 {
@@ -11,9 +11,9 @@ public static class ScanCommand
     };
 
     public const string Help = """
-        ScanBridge for Windows - local QR decoder for agent tools
+        AgentQR for Windows - local QR decoder for agent tools
 
-        scanbridge scan IMAGE [--reveal]
+        agentqr scan IMAGE [--reveal]
 
         Accepts one local image file. Returns a JSON array on stdout.
         By default, URL paths, queries and payload text are redacted.

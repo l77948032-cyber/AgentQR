@@ -3,7 +3,7 @@ import Foundation
 import ImageIO
 import UniformTypeIdentifiers
 import XCTest
-@testable import ScanBridgeCore
+@testable import AgentQRCore
 
 final class ScannerTests: XCTestCase {
     func testWebURLPolicy() {

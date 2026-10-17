@@ -120,7 +120,7 @@
           "ZXing.Net": "0.16.11"
         }
       },
-      "scanbridge": {
+      "agentqr": {
         "type": "Project",
         "dependencies": {
           "ZXing.Net.Bindings.Windows.Compatibility": "[0.16.16, )"

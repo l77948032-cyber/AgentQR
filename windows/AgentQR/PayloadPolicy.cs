@@ -1,7 +1,7 @@
 using System.Text.Json.Serialization;
 using System.Text.RegularExpressions;
 
-namespace ScanBridge;
+namespace AgentQR;
 
 public sealed record ScanResult(int Index, string Kind, string Destination,
     [property: JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingNull)] string? Payload);

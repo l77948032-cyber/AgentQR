@@ -6,8 +6,8 @@
     <ImplicitUsings>enable</ImplicitUsings>
     <Nullable>enable</Nullable>
     <TreatWarningsAsErrors>true</TreatWarningsAsErrors>
-    <AssemblyName>scanbridge</AssemblyName>
-    <RootNamespace>ScanBridge</RootNamespace>
+    <AssemblyName>agentqr</AssemblyName>
+    <RootNamespace>AgentQR</RootNamespace>
     <RestorePackagesWithLockFile>true</RestorePackagesWithLockFile>
   </PropertyGroup>
   <ItemGroup>

@@ -1,15 +1,15 @@
 import AppKit
 import Foundation
-import ScanBridgeCore
+import AgentQRCore
 
 @MainActor
 func run() async -> Int32 {
     let args = Array(CommandLine.arguments.dropFirst())
     let usage = """
-    ScanBridge: local QR decoding for macOS (technical prototype)
+    AgentQR: local QR decoding for macOS (technical prototype)
 
-    scanbridge scan IMAGE [--reveal]
-    scanbridge open IMAGE [--index N] [--app BUNDLE_ID]
+    agentqr scan IMAGE [--reveal]
+    agentqr open IMAGE [--index N] [--app BUNDLE_ID]
 
     scan prints JSON with private paths and tokens redacted by default.
     --reveal includes full QR payloads in stdout; do not publish that output.
