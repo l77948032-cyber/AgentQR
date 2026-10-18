@@ -10,9 +10,19 @@
 
 ## 安装
 
-把下面这句话发给你的 agent：
+### npx skills（推荐）
 
-> 请帮我安装 AgentQR skill：[https://github.com/l77948032-cyber/AgentQR/tree/main/skills/agentqr](https://github.com/l77948032-cyber/AgentQR/tree/main/skills/agentqr)。
+```bash
+npx skills add https://github.com/l77948032-cyber/AgentQR --skill agentqr
+```
+
+按提示选择你的 agent。默认安装到当前项目；添加 `--global` 可供多个项目使用。也可以显式指定 agent，例如 Codex：
+
+```bash
+npx skills add https://github.com/l77948032-cyber/AgentQR --skill agentqr --agent codex
+```
+
+安装命令需要 Node.js 22.20+ 和 npm；扫码需要 macOS 或 Windows，以及 Python 3.10+。首次扫码会自动下载对应系统的本地扫码器并完成自检，无需手动编译或安装 Swift / .NET SDK。`npx skills` 安装的是 skill 文件，扫码器由 skill 的配套脚本完成安装。
 
 ---
 
