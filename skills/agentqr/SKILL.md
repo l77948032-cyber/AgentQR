@@ -36,15 +36,15 @@ arbitrary sites are not verified integrations.
 - Screenshot capture needs the host's screen/browser tools and any applicable
   OS permission; the decoder does not capture the screen itself. Prefer the QR
   region to a full-screen capture containing unrelated personal information.
-- For QQ Mail, first check whether an authorized mail connector is connected.
-  If the available connector exposes `mail_status(checkConnection=true)`, use
-  that check. Otherwise follow its documented connection/status mechanism.
+- For any mailbox, first check whether an authorized mail tool or connector is
+  available using its documented connection/status mechanism. User-provided QR
+  images or attachments can be processed without connecting a mailbox.
 - If mail access is missing, ask the user to connect their mailbox through the
-  connector's secure configuration. An IMAP-based connector may require the
-  user to enable IMAP and configure a QQ Mail authorization code. Never ask for
-  the mailbox password or authorization code in chat, source files, or logs.
-- A QQ/WeChat desktop login is not an IMAP connection. Do not infer that one
-  grants access to the other. Confirm the account and requested mail/date range
+  tool's secure configuration and the provider's authorization flow. Never ask
+  for mailbox passwords, authorization codes, or other credentials in chat,
+  source files, or logs.
+- A signed-in mail app or browser does not automatically grant a separate tool
+  access to that mailbox. Confirm the account and requested mail/date range
   when ambiguous, then read only that range and needed attachments. Do not
   silently prefilter a request to inspect every message in an explicit range.
 - Reading mail for QR codes does not authorize sending, forwarding, deletion,

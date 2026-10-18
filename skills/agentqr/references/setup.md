@@ -80,5 +80,5 @@ reload procedure if it cannot discover a new skill immediately.
 For a trusted offline bundle, use `install --bundle-dir <directory>` containing
 the release `manifest.json` and matching ZIP. The same checks and self-test run.
 
-Installing the decoder does not connect QQ Mail or sign into WeChat/WeCom.
+Installing the decoder does not connect a mailbox or sign into WeChat/WeCom.
 Use the workflows in `SKILL.md` when a real task needs those existing host tools.
