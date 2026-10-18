@@ -31,7 +31,7 @@ def package(source, target, output):
         name, version = runtime_key.removeprefix("runtimepack.").split("/")
         pack = Path.home() / ".nuget/packages" / name.lower() / version
         notices = [path for path in pack.iterdir() if path.is_file() and
-                   ("license" in path.name.lower() or "thirdpartynotices" in path.name.lower())]
+                   ("license" in path.name.lower() or "thirdpartynotices" in path.name.lower().replace("-", ""))]
         if len(notices) < 2:
             raise ValueError("Missing .NET runtime license or third-party notices")
         files.update({"licenses/dotnet-" + path.name: path for path in notices})
