@@ -47,7 +47,7 @@ jobs:
     env:
       DOTNET_CLI_TELEMETRY_OPTOUT: '1'
       DOTNET_NOLOGO: '1'
-      AGENTQR_HOME: ${{ runner.temp }}/agentqr-install-check
+      AGENTQR_HOME: ${{ github.workspace }}/.agentqr-install-check
     steps:
       - uses: actions/checkout@v7.0.1
       - uses: actions/setup-python@v6
