@@ -55,6 +55,33 @@ class RuntimeTests(unittest.TestCase):
             with self.subTest(manifest=manifest), self.assertRaises(runtime.Failure):
                 runtime.release_entry(manifest, "macos-arm64")
 
+    def test_official_download_fallback(self):
+        base = f"https://github.com/{runtime.REPOSITORY}/releases/download/v{runtime.VERSION}/"
+        api = f"https://api.github.com/repos/{runtime.REPOSITORY}/releases/"
+        calls = []
+        def transfer(url, destination, limit, accept="application/octet-stream"):
+            calls.append(url)
+            if url == base + "manifest.json":
+                raise runtime.Failure("DOWNLOAD_FAILED", "unreachable")
+            if url == api + "tags/v" + runtime.VERSION:
+                Path(destination).write_text(json.dumps({"tag_name": "v" + runtime.VERSION, "draft": False,
+                    "assets": [{"name": "manifest.json", "url": api + "assets/123",
+                                "browser_download_url": base + "manifest.json", "size": 2}]}))
+            else:
+                self.assertEqual(api + "assets/123", url)
+                Path(destination).write_bytes(b"{}")
+        with patch.object(runtime, "https_download", side_effect=transfer):
+            runtime.download(base + "manifest.json", self.root / "download", limit=100_000)
+        self.assertEqual(3, len(calls))
+        self.assertEqual(b"{}", (self.root / "download").read_bytes())
+
+    def test_download_size_failure_is_not_retried(self):
+        url = f"https://github.com/{runtime.REPOSITORY}/releases/download/v{runtime.VERSION}/manifest.json"
+        with patch.object(runtime, "https_download", side_effect=runtime.Failure("DOWNLOAD_TOO_LARGE", "size")) as download:
+            with self.assertRaises(runtime.Failure):
+                runtime.download(url, self.root / "download")
+        self.assertEqual(1, download.call_count)
+
     def test_unsafe_archives(self):
         names = ["../outside", "/absolute", "C:/drive", "folder\\file", "file:stream",
                  "CON.txt", "file.", "file ", "./agentqr", "a//b", "a?b", "."]

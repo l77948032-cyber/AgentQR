@@ -29,6 +29,8 @@ Installation detects the OS and process architecture, downloads the fixed
 version's ZIP and manifest from this project's GitHub Release over HTTPS,
 checks SHA-256, rejects unsafe ZIP paths, and decodes a bundled synthetic QR
 before activating the decoder. It never reads accounts or real invoices.
+If the release download URL is unreachable, it retries via GitHub's official
+public release API without tokens or third-party mirrors. TLS remains verified.
 The checksum detects mismatched downloads; it is not a code-signing certificate.
 
 The runtime is kept in the current user's application-data directory:

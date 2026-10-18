@@ -82,26 +82,24 @@ def installed(root=None):
     return None
 
 
-def download(url, destination, limit=MAX_DOWNLOAD):
-    # No GitHub tokens, mailbox credentials, or application sessions are used.
-    if not url.startswith(f"https://github.com/{REPOSITORY}/releases/download/v{VERSION}/"):
-        raise Failure("INVALID_DOWNLOAD_URL", "Unexpected release download location.")
+def https_download(url, destination, limit, accept="application/octet-stream"):
     try:
-        request = urllib.request.Request(url, headers={"User-Agent": "AgentQR/" + VERSION})
-        with urllib.request.urlopen(request, timeout=60) as response, Path(destination).open("wb") as output:
+        request = urllib.request.Request(url, headers={"User-Agent": "AgentQR/" + VERSION, "Accept": accept})
+        with urllib.request.urlopen(request, timeout=20) as response, Path(destination).open("wb") as output:
             size = 0
             while block := response.read(1024 * 1024):
                 size += len(block)
                 if size > limit:
                     raise Failure("DOWNLOAD_TOO_LARGE", "Release file exceeds the size limit.")
                 output.write(block)
-    except urllib.error.URLError as error:
+    except (urllib.error.URLError, OSError) as error:
         # Some Python distributions omit the system trust store. Use the OS curl
         # trust store without weakening TLS verification or modifying certificates.
-        if not isinstance(error.reason, ssl.SSLCertVerificationError) or not shutil.which("curl"):
+        if not isinstance(getattr(error, "reason", None), ssl.SSLCertVerificationError) or not shutil.which("curl"):
             raise Failure("DOWNLOAD_FAILED", "Cannot download this release. Check network access and repository visibility.") from None
         result = subprocess.run([
             "curl", "--fail", "--silent", "--show-error", "--location",
+            "--http1.1", "--connect-timeout", "10", "--header", "Accept: " + accept,
             "--proto", "=https", "--proto-redir", "=https", "--max-time", "180",
             "--max-filesize", str(limit), "--output", str(destination), url,
         ], capture_output=True, timeout=190)
@@ -109,6 +107,36 @@ def download(url, destination, limit=MAX_DOWNLOAD):
             raise Failure("DOWNLOAD_FAILED", "System HTTPS download failed; certificate checks were not disabled.")
     if Path(destination).stat().st_size > limit:
         raise Failure("DOWNLOAD_TOO_LARGE", "Release file exceeds the size limit.")
+
+
+def download(url, destination, limit=MAX_DOWNLOAD):
+    # Both transports are anonymous HTTPS to this repository's public release.
+    base = f"https://github.com/{REPOSITORY}/releases/download/v{VERSION}/"
+    if not url.startswith(base) or "/" in url[len(base):]:
+        raise Failure("INVALID_DOWNLOAD_URL", "Unexpected release download location.")
+    try:
+        https_download(url, destination, limit)
+        return
+    except Failure as error:
+        if error.code != "DOWNLOAD_FAILED":
+            raise
+    api = f"https://api.github.com/repos/{REPOSITORY}/releases/"
+    with tempfile.TemporaryDirectory(prefix="agentqr-release-") as temporary:
+        metadata = Path(temporary) / "release.json"
+        https_download(api + "tags/v" + VERSION, metadata, 1_000_000, "application/vnd.github+json")
+        try:
+            release = json.loads(metadata.read_text(encoding="utf-8"))
+            if release["tag_name"] != "v" + VERSION or release["draft"]:
+                raise ValueError()
+            asset = next(item for item in release["assets"] if item["name"] == url[len(base):])
+            asset_url = asset["url"]
+            prefix = api + "assets/"
+            if (not asset_url.startswith(prefix) or not asset_url[len(prefix):].isdigit()
+                    or asset["browser_download_url"] != url or asset["size"] > limit):
+                raise ValueError()
+        except (ValueError, TypeError, KeyError, StopIteration):
+            raise Failure("DOWNLOAD_FAILED", "The public release API did not return the expected asset.") from None
+        https_download(asset_url, destination, limit)
 
 
 def release_entry(manifest, platform_target):
