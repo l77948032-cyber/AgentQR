@@ -61,7 +61,9 @@ class RuntimeTests(unittest.TestCase):
         for name in names:
             archive = self.root / "unsafe.zip"
             with zipfile.ZipFile(archive, "w") as package:
-                package.writestr(name, "untrusted")
+                entry = zipfile.ZipInfo(name)
+                entry.filename = name
+                package.writestr(entry, "untrusted")
             with self.subTest(name=name), self.assertRaises(runtime.Failure):
                 runtime.unpack(archive, self.root / "unpacked")
         self.assertFalse((self.root / "unpacked").exists())

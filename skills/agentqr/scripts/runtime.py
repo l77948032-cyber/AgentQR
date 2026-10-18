@@ -134,7 +134,9 @@ def unpack(archive, destination):
         if len(entries) > 10000:
             raise Failure("INVALID_ARCHIVE", "Too many archive entries.")
         for entry in entries:
-            name = entry.filename
+            # ZipInfo normalizes separators on Windows; inspect the original
+            # archive name so platform-specific cleanup cannot hide unsafe input.
+            name = entry.orig_filename
             path = PurePosixPath(name)
             mode = entry.external_attr >> 16
             # Also reject Windows device/ADS paths and case-insensitive collisions.
