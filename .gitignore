@@ -12,3 +12,5 @@ artifacts/
 **/bin/
 **/obj/
 **/TestResults/
+__pycache__/
+*.pyc

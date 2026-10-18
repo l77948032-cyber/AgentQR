@@ -1,0 +1,119 @@
+name: Native skill runtimes
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - 'Sources/**'
+      - 'Tests/**'
+      - 'Package.swift'
+      - 'windows/**'
+      - 'skills/**'
+      - 'tests/**'
+      - '.github/scripts/**'
+      - '.github/workflows/release.yml'
+      - 'licenses/**'
+      - 'LICENSE'
+      - 'THIRD_PARTY_NOTICES.md'
+  pull_request:
+  workflow_dispatch:
+    inputs:
+      publish:
+        description: Publish a new immutable version after every native test passes
+        type: boolean
+        default: false
+
+permissions:
+  contents: read
+
+jobs:
+  runtime:
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - runner: macos-15
+            target: macos-arm64
+          - runner: macos-15-intel
+            target: macos-x64
+          - runner: windows-latest
+            target: windows-x64
+            rid: win-x64
+          - runner: windows-11-arm
+            target: windows-arm64
+            rid: win-arm64
+    runs-on: ${{ matrix.runner }}
+    timeout-minutes: 25
+    env:
+      DOTNET_CLI_TELEMETRY_OPTOUT: '1'
+      DOTNET_NOLOGO: '1'
+      AGENTQR_HOME: ${{ runner.temp }}/agentqr-install-check
+    steps:
+      - uses: actions/checkout@v7.0.1
+      - uses: actions/setup-python@v6
+        with:
+          python-version: '3.12'
+      - name: Test installer behavior
+        run: python -m unittest discover -s tests -v
+      - name: Check architecture
+        run: python -c "import sys; sys.path.insert(0, 'skills/agentqr/scripts'); import runtime; assert runtime.target() == '${{ matrix.target }}', runtime.target()"
+      - uses: actions/setup-dotnet@v6.0.0
+        if: runner.os == 'Windows'
+        with:
+          dotnet-version: '10.0.x'
+      - name: Windows dependency restore
+        if: runner.os == 'Windows'
+        run: dotnet restore windows/AgentQR.Tests --locked-mode
+      - name: Windows real decoding tests
+        if: runner.os == 'Windows'
+        run: dotnet test windows/AgentQR.Tests -c Release --no-restore
+      - name: Windows self-contained publish
+        if: runner.os == 'Windows'
+        run: dotnet publish windows/AgentQR -c Release -r ${{ matrix.rid }} --self-contained true -p:RestoreLockedMode=true -o artifacts/native
+      - name: macOS real decoding tests
+        if: runner.os == 'macOS'
+        run: swift test
+      - name: macOS release build and package
+        if: runner.os == 'macOS'
+        shell: bash
+        run: |
+          set -euo pipefail
+          swift build -c release
+          python .github/scripts/package-runtime.py --source "$(swift build -c release --show-bin-path)" --target '${{ matrix.target }}' --output artifacts/release
+      - name: Windows package
+        if: runner.os == 'Windows'
+        run: python .github/scripts/package-runtime.py --source artifacts/native --target ${{ matrix.target }} --output artifacts/release
+      - name: Fresh offline installation and real self-test
+        run: python skills/agentqr/scripts/agentqr.py install --bundle-dir artifacts/release
+      - name: Installed runtime diagnosis
+        run: python skills/agentqr/scripts/agentqr.py doctor
+      - name: Repeat-install and payload redaction check
+        run: python skills/agentqr/scripts/agentqr.py install --bundle-dir artifacts/release
+      - uses: actions/upload-artifact@v7.0.2
+        with:
+          name: ${{ matrix.target }}
+          path: artifacts/release/*.zip
+          if-no-files-found: error
+          retention-days: 14
+
+  publish:
+    if: github.event_name == 'workflow_dispatch' && inputs.publish && github.ref == 'refs/heads/main'
+    needs: runtime
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+    steps:
+      - uses: actions/checkout@v7.0.1
+      - uses: actions/download-artifact@v8
+        with:
+          path: artifacts/release
+          merge-multiple: true
+      - name: Assemble complete checksums and publish
+        env:
+          GH_TOKEN: ${{ github.token }}
+        shell: bash
+        run: |
+          set -euo pipefail
+          python3 .github/scripts/package-runtime.py --output artifacts/release --require-all
+          VERSION=$(python3 skills/agentqr/scripts/agentqr.py --version)
+          gh release create "v$VERSION" artifacts/release/* --target "$GITHUB_SHA" --title "AgentQR $VERSION" --notes 'Native QR runtimes for the AgentQR skill. macOS and Windows, x64 and ARM64. Every archive passed native decoding, fresh installation, and redaction tests. Login uses existing host-agent tools; no login-state extraction backend is included. Requires Python 3.10+ for the skill launcher. CLI binaries are not notarized desktop app installers.'

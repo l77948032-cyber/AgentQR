@@ -1,81 +1,82 @@
-# Local decoder setup
+# Installation and diagnosis
 
-Use this reference when installing AgentQR or diagnosing a missing decoder.
-The skill and compiled decoder are separate components. Never report full
-readiness solely because `SKILL.md` was copied successfully.
+Install this complete `skills/agentqr` folder using the host's supported skill
+installer. Then perform runtime setup below as part of the same installation
+task. Copying `SKILL.md` alone is not a completed installation. A host without
+skill discovery can invoke the script, but is not a configured skill host.
 
-## Get the source
+## Runtime setup
 
-The source repository is https://github.com/l77948032-cyber/AgentQR.git.
-Use the host's supported installer to install `skills/agentqr` as a skill. Keep
-this reference with it. A host without skill support can read these instructions
-but cannot be described as having installed a discoverable skill.
+Requires macOS 13+ or supported 64-bit Windows, and Python 3.10+. Release
+artifacts cover x64 and ARM64. Python uses only its standard library; users do
+not need Swift, Xcode, the .NET SDK, pip packages, or a separately installed
+.NET runtime. If Python is missing, use the host's supported Python environment
+or ask before installing it from its official distribution. Never execute a
+command that opens the Windows Store and report Python as installed.
 
-For the decoder, reuse an existing checkout only after checking its origin and
-working tree. Otherwise clone the repository into a new, user-owned application
-data directory outside the skill directory. Choose an unused path; never replace
-an existing project. Record the source commit used for the build. Do not modify
-global Git configuration, request administrator access, or upload local files.
-
-```sh
-git clone https://github.com/l77948032-cyber/AgentQR.git <new-source-directory>
-```
-
-Run each build command separately, checking its exit status. Stop and report a
-failed command. The paths below are placeholders to resolve to actual local
-paths, not literal arguments to execute. If a toolchain is missing, ask before
-installing it and use the vendor's official distribution.
-
-## macOS
-
-Requires macOS 13 or later and a Swift 6-compatible toolchain. Check `sw_vers`
-and `swift --version`; Xcode Command Line Tools must supply the required SDK.
-
-Run from the source checkout:
+Resolve `<skill>` to the absolute installed folder. Run with the available
+Python interpreter (`python3` on macOS, often `python` or `py -3` on Windows):
 
 ```sh
-swift test
-swift build -c release
-swift build -c release --show-bin-path
+python3 <skill>/scripts/agentqr.py install
+python3 <skill>/scripts/agentqr.py doctor
+python3 <skill>/scripts/agentqr.py self-test
 ```
 
-The test suite generates synthetic QR images locally and checks real decoding,
-blank/invalid images, and redaction. Use the `agentqr` executable inside the
-reported release directory; verify that its `--help` command exits successfully.
-No real invoice or login QR is needed for installation testing.
+On Windows, pass the interpreter and script path as separate process arguments;
+do not copy the literal `python3` command if that interpreter is unavailable.
+Installation detects the OS and process architecture, downloads the fixed
+version's ZIP and manifest from this project's GitHub Release over HTTPS,
+checks SHA-256, rejects unsafe ZIP paths, and decodes a bundled synthetic QR
+before activating the decoder. It never reads accounts or real invoices.
+The checksum detects mismatched downloads; it is not a code-signing certificate.
 
-## Windows
+The runtime is kept in the current user's application-data directory:
 
-Requires Windows and the .NET 10 SDK to build; check `dotnet --list-sdks` and
-select the installed architecture. Use `win-x64` for an x64 process environment,
-or `win-arm64` for native ARM64. Do not select a Linux/macOS runtime for this
-backend. Keep the complete self-contained publish directory, not just the EXE.
+- macOS: `~/Library/Application Support/AgentQR/<version>/<target>/`
+- Windows: `%LOCALAPPDATA%/AgentQR/<version>/<target>/`
+- `AGENTQR_HOME` overrides the cache root for isolated tests or managed installs.
 
-Run from the source checkout (example for x64):
+No administrator access, shell profile edit, PATH edit, login, or mailbox
+connection is required. Do not disable Gatekeeper, SmartScreen, or TLS checks
+if local policy blocks the runtime; report the actual installation failure.
+These CLI artifacts are not notarized desktop application installers.
 
-```powershell
-dotnet restore windows/AgentQR.Tests --locked-mode
-dotnet test windows/AgentQR.Tests -c Release --no-restore
-dotnet publish windows/AgentQR -c Release -r win-x64 --self-contained true -o artifacts/windows-x64
-.\artifacts\windows-x64\agentqr.exe --help
+## Stable invocation
+
+```sh
+python3 <skill>/scripts/agentqr.py scan <local-image>
+python3 <skill>/scripts/agentqr.py scan <local-image> --reveal
 ```
 
-For ARM64, replace the runtime and output directory consistently. The tests
-generate synthetic QR images and exercise the decoder and command contract.
-Run these tests on Windows: a cross-build elsewhere is not runtime validation.
-Dependency restore may contact NuGet; ordinary QR decoding does not require a
-network connection. Missing connectivity or failed restore is a setup failure,
-not a QR recognition failure.
+Normal decoding is offline. Missing runtimes trigger installation on first
+scan. Allow a five-minute timeout for setup; ordinary decoding has a 45-second
+timeout. Default output omits the full payload. Only use `--reveal` when the
+authorized next step needs it. Success is a JSON array. Failures are JSON
+objects with `error`; check the exit status before interpreting results.
 
-## Make the decoder available to the agent
+`doctor` reports decoder readiness without touching browser/app/mail accounts.
+`self-test` verifies actual QR recognition and default output redaction. Report
+skill discovery and runtime readiness separately, and follow the host's own
+reload procedure if it cannot discover a new skill immediately.
 
-Record the absolute executable path in the host's local tool configuration or
-task context. Invoke that path with a process argument array. If a persistent
-configuration mechanism is not available, report the path and that limitation;
-do not claim later sessions can discover it automatically. Do not rewrite the
-shared skill with a user's private path or silently edit shell startup files.
+## Failure and recovery
 
-Verify `--help` and the platform's synthetic QR tests before reporting decoder
-readiness. Distinguish skill installation, decoder build, and runtime testing.
-Installing this skill does not connect QQ Mail, sign into WeChat/WeCom, or grant
-browser/screen permissions. Request those separately only when a task needs them.
+- `DOWNLOAD_FAILED`: check GitHub connectivity and release availability. Do not
+  ask for application passwords or upload the user's QR to another service.
+- `CHECKSUM_MISMATCH` / `INVALID_ARCHIVE`: stop; no decoder is activated. Do not
+  bypass integrity checking or run partially downloaded code.
+- `INSTALL_BUSY`: another installer may hold the cache's `.install-lock`.
+  Inspect its recorded PID before removing a stale lock; do not interrupt a
+  live installation or automatically delete user directories.
+- `INSTALL_DAMAGED`: move only the named version/target cache aside after
+  confirming no task uses it, then reinstall. Keep user source files untouched.
+- `SELF_TEST_FAILED` / `DECODER_START_FAILED`: report OS/architecture and error
+  code, without attaching private images. Source builds are a developer fallback,
+  not a successful release installation.
+
+For a trusted offline bundle, use `install --bundle-dir <directory>` containing
+the release `manifest.json` and matching ZIP. The same checks and self-test run.
+
+Installing the decoder does not connect QQ Mail or sign into WeChat/WeCom.
+Use the workflows in `SKILL.md` when a real task needs those existing host tools.
