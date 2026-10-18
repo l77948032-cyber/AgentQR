@@ -1,4 +1,4 @@
-# 一个让 agent 识别二维码的插件。
+# 给你的 agent 识别二维码的能力
 
 ---
 
@@ -12,9 +12,7 @@
 
 把下面这句话发给你的 agent：
 
-> 请帮我安装 AgentQR：[https://github.com/l77948032-cyber/AgentQR](https://github.com/l77948032-cyber/AgentQR)。根据当前操作系统构建并配置本地扫码工具，让你能够调用它识别二维码，并用测试二维码验证安装成功。
-
-当前为源码构建方式，尚未提供一键插件安装入口。
+> 请帮我安装 AgentQR skill：[https://github.com/l77948032-cyber/AgentQR/tree/main/skills/agentqr](https://github.com/l77948032-cyber/AgentQR/tree/main/skills/agentqr)。
 
 ---
 
