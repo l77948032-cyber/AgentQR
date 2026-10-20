@@ -128,6 +128,20 @@ class FlowTests(unittest.TestCase):
         self.batch.process(child, explicit=True)
         self.assertEqual(self.batch.task(task["id"])["status"], "resolved")
 
+    def test_repeat_import_is_idempotent_and_missing_output_is_reported(self):
+        task = self.batch.add_url("m", "https://issuer.example/file")
+        path = self.root / "download.pdf"
+        path.write_bytes(pdf())
+        self.batch.import_download(task["id"], path)
+        self.batch.import_download(task["id"], path)
+        self.assertEqual(self.batch.report()["duplicate_files"], 0)
+        output = Path(self.batch.report()["documents"][0]["file"])
+        output.unlink()
+        self.assertEqual(self.batch.report()["status"], "needs_attention")
+        self.batch.import_download(task["id"], path)
+        self.assertEqual(output.read_bytes(), path.read_bytes())
+        self.assertEqual(self.batch.report()["status"], "complete")
+
     def test_plaintext_links_and_inline_images_are_candidates(self):
         message = EmailMessage()
         message["Subject"] = "Notice"
@@ -259,6 +273,8 @@ class FlowTests(unittest.TestCase):
     def test_real_native_qr_to_pdf_when_runtime_is_installed(self):
         import runtime
         from invoice_flow import scan_image
+        if sys.platform not in ("darwin", "win32"):
+            self.skipTest("Native QR decoder supports macOS and Windows")
         if not runtime.installed():
             self.skipTest("Native QR runtime not installed on this runner")
         self.batch.scan = scan_image

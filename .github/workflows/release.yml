@@ -91,6 +91,8 @@ jobs:
         run: python skills/agentqr/scripts/agentqr.py doctor
       - name: Repeat-install and payload redaction check
         run: python skills/agentqr/scripts/agentqr.py install --bundle-dir artifacts/release
+      - name: Invoice pipeline with the installed native QR runtime
+        run: python -m unittest discover -s tests -p "test_invoices.py" -v
       - uses: actions/upload-artifact@v7.0.2
         with:
           name: ${{ matrix.target }}

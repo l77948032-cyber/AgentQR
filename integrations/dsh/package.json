@@ -1,6 +1,6 @@
 {
   "name": "@l77948032-cyber/dsh-agentqr",
-  "version": "0.3.0",
+  "version": "0.3.1",
   "private": true,
   "description": "AgentQR：从 QQ 邮箱收集发票、识别领取二维码，配合授权下载并去重保存 PDF",
   "type": "module",

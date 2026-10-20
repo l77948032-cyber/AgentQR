@@ -186,7 +186,8 @@ class Batch:
             target = (self.pdfs if doc.get("invoice_like") else self.review) / f"{hash_}.pdf"
             if not target.exists() or digest(bounded_read(target)) != hash_:
                 private_write(target, data)
-            task.update(status="duplicate", document=hash_)
+            status = task["status"] if task.get("document") == hash_ and task["status"] in DONE else "duplicate"
+            task.update(status=status, document=hash_)
             return
         info = self.inspect(path)
         target = (self.pdfs if info.get("invoice_like") else self.review) / f"{hash_}.pdf"
@@ -346,6 +347,12 @@ class Batch:
                     and not any(t.get("document") for t in related) and message["status"] != "pending"):
                 message["status"] = "needs_manual_review"
         metadata = {key: json.loads(value) for key, value in self.db.execute("SELECT key, value FROM meta")}
+        for doc in docs:
+            try:
+                if digest(bounded_read(doc["file"])) != doc["hash"]:
+                    doc["output_error"] = "OUTPUT_PDF_CHANGED"
+            except (OSError, InvoiceError):
+                doc["output_error"] = "OUTPUT_PDF_MISSING_OR_UNREADABLE"
         read_errors = metadata.get("collection", {}).get("read_errors", [])
         result = {"output": str(self.root), "messages_checked": len(messages), "pdf_count": len(docs),
                   "invoice_candidates": sum(bool(d.get("invoice_like")) for d in docs),
@@ -355,7 +362,8 @@ class Batch:
         incomplete = metadata.get("collection", {}).get("state") in ("reading", "partial", "failed")
         result["status"] = "needs_attention" if (pending or read_errors or incomplete or any(
             m["status"] == "needs_manual_review" for m in messages) or any(
-            not d.get("invoice_like") or d.get("possible_duplicate_of") for d in docs)) else "complete"
+            not d.get("invoice_like") or d.get("possible_duplicate_of") or d.get("output_error")
+            for d in docs)) else "complete"
         if not reveal:
             for message in messages:
                 message.pop("subject", None)
