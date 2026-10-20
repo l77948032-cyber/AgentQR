@@ -102,7 +102,9 @@ def https_download(url, destination, limit, accept="application/octet-stream"):
             "--http1.1", "--connect-timeout", "10", "--header", "Accept: " + accept,
             "--proto", "=https", "--proto-redir", "=https", "--max-time", "180",
             "--max-filesize", str(limit), "--output", str(destination), url,
-        ], capture_output=True, timeout=190)
+        ], capture_output=True, timeout=190,
+            env={k: v for k, v in os.environ.items()
+                 if not k.startswith(("QQMAIL_", "AGENTQR_QQ_"))})
         if result.returncode != 0:
             raise Failure("DOWNLOAD_FAILED", "System HTTPS download failed; certificate checks were not disabled.")
     if Path(destination).stat().st_size > limit:
@@ -191,7 +193,9 @@ def unpack(archive, destination):
 def invoke(program, args, timeout=45):
     try:
         result = subprocess.run([str(program), *args], capture_output=True, timeout=timeout,
-                                encoding="utf-8", errors="replace")
+                                encoding="utf-8", errors="replace",
+                                env={k: v for k, v in os.environ.items()
+                                     if not k.startswith(("QQMAIL_", "AGENTQR_QQ_"))})
     except subprocess.TimeoutExpired:
         raise Failure("DECODER_TIMEOUT", "QR decoding exceeded the time limit.") from None
     except OSError:

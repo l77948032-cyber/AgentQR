@@ -10,6 +10,10 @@ import runtime
 
 
 def main(argv=None):
+    argv = sys.argv[1:] if argv is None else argv
+    if argv and argv[0] == "invoices":
+        import invoices
+        return invoices.main(argv[1:])
     parser = argparse.ArgumentParser(description="AgentQR: install, verify and decode QR images locally.")
     parser.add_argument("--version", action="version", version=runtime.VERSION)
     commands = parser.add_subparsers(dest="command", required=True)
@@ -20,6 +24,7 @@ def main(argv=None):
     scan = commands.add_parser("scan", help="Decode a local image; installs the native runtime if missing")
     scan.add_argument("image")
     scan.add_argument("--reveal", action="store_true", help="Include sensitive original payloads in output")
+    commands.add_parser("invoices", help="Collect QQ Mail invoices; run invoices --help for commands")
     args = parser.parse_args(argv)
     try:
         if args.command == "install":

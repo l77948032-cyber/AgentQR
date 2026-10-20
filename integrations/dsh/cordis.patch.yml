@@ -1,0 +1,3 @@
+- insert:
+    - id: agentqr
+      name: '@l77948032-cyber/dsh-agentqr'

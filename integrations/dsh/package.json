@@ -1,0 +1,18 @@
+{
+  "name": "@l77948032-cyber/dsh-agentqr",
+  "version": "0.3.0",
+  "private": true,
+  "description": "AgentQR：从 QQ 邮箱收集发票、识别领取二维码，配合授权下载并去重保存 PDF",
+  "type": "module",
+  "main": "index.js",
+  "files": ["index.js", "config.js", "cordis.patch.yml", "skills", "LICENSE"],
+  "engines": { "node": ">=22.19.0", "dsh": ">=0.2.1-rc.2 <0.2.2" },
+  "dsh": { "bundle": { "patch": "./cordis.patch.yml" } },
+  "peerDependencies": { "@deepseek-ai/dsh-skill-filesystem": ">=0.2.1-rc.2 <0.2.2" },
+  "peerDependenciesMeta": { "@deepseek-ai/dsh-skill-filesystem": { "optional": true } },
+  "scripts": {
+    "prepack": "node build.mjs && node --test test.mjs",
+    "check": "node build.mjs && node --check index.js && node --test test.mjs"
+  },
+  "license": "MIT"
+}

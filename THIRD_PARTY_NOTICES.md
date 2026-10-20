@@ -34,3 +34,10 @@ in `windows/AgentQR/packages.lock.json`.
 Test-only NuGet packages and build SDKs are not included in the runtime ZIPs.
 The Python skill launcher uses the host's Python standard library; it does not
 redistribute a Python interpreter or require pip packages.
+# Invoice PDF parsing
+
+The optional invoice workflow installs `pypdf` 6.21.1 into a local virtual
+environment. pypdf is distributed under the BSD-3-Clause license. Its original
+license is included in the installed Python distribution.
+Source: https://github.com/py-pdf/pypdf
+
